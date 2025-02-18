@@ -1,14 +1,12 @@
 import { HTTPException } from "hono/http-exception";
-import { client } from "../db.js";
+import { db } from "../db.js";
 import type { CreateTourismPackageDto } from "../dto/tourism-package-dto.js";
 import { TourismPackage } from "../entities/tourism-package.js";
 import { Hono } from "hono";
 
 export const tourismPackages = new Hono();
 
-const packagesCollection = client
-  .db("travel-app")
-  .collection<TourismPackage>("packages");
+const packagesCollection = db.collection<TourismPackage>("packages");
 
 //Listar paquetes
 tourismPackages.get("/", async (c) => {
@@ -20,7 +18,7 @@ tourismPackages.get("/", async (c) => {
 tourismPackages.get("/:id", async (c) => {
   const id = c.req.param("id");
 
-  const packageFound = await packagesCollection.findOne({ id });
+  const packageFound = await packagesCollection.findOne({ _id: id });
 
   if (!packageFound) {
     throw new HTTPException(404, { message: "Package  was not found" });
@@ -45,21 +43,23 @@ tourismPackages.post("/", async (c) => {
   return c.json(newPackage);
 });
 
-// //Modificar paquete
-// tourismPackages.put("/:id", async (c) => {
-//   const id = c.req.param("id");
-//   const body: CreateTourismPackageDto = await c.req.json();
+//Modificar paquete
+tourismPackages.put("/:id", async (c) => {
+  const id = c.req.param("id");
+  const body: CreateTourismPackageDto = await c.req.json();
 
-//   const packageFound = db.packages.find((p) => p.id === id);
+  const packageUpdated = await packagesCollection.findOneAndUpdate(
+    { _id: id },
+    { $set: body },
+    { returnDocument: "after" },
+  );
 
-//   if (!packageFound) {
-//     throw new HTTPException(404, { message: "Package was not found" });
-//   }
+  if (packageUpdated === null) {
+    throw new HTTPException(404, { message: "Package was not found" });
+  }
 
-//   Object.assign(packageFound, body);
-
-//   return c.json(packageFound, 201);
-// });
+  return c.json(packageUpdated);
+});
 
 //Eliminar paquete
 tourismPackages.delete("/:id", async (c) => {
