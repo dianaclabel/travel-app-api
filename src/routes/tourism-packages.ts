@@ -35,6 +35,7 @@ tourismPackages.post("/", async (c) => {
     body.name,
     body.description,
     body.photo,
+    body.categories,
     new Date(),
   );
 

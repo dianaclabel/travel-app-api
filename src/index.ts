@@ -4,10 +4,12 @@ import { Hono } from "hono";
 import { tourismPackages } from "./routes/tourism-packages.js";
 import { logger } from "hono/logger";
 import { showRoutes } from "hono/dev";
+import { cors } from "hono/cors";
 
 const app = new Hono();
 
 app.use(logger());
+app.use(cors());
 
 app.get("/", (c) => {
   return c.text("Hello Hono!");
