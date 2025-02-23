@@ -3,8 +3,9 @@ import { db } from "../db.js";
 import type { CreateTourismPackageDto } from "../dto/tourism-package-dto.js";
 import { TourismPackage } from "../entities/tourism-package.js";
 import { Hono } from "hono";
+import type { AppVariables } from "../types.js";
 
-export const tourismPackages = new Hono();
+export const tourismPackages = new Hono<AppVariables>();
 
 const packagesCollection = db.collection<TourismPackage>("packages");
 

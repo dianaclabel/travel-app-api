@@ -6,8 +6,11 @@ import { logger } from "hono/logger";
 import { showRoutes } from "hono/dev";
 import { cors } from "hono/cors";
 import { auth } from "./auth.js";
+import { HTTPException } from "hono/http-exception";
+import type { AppVariables } from "./types.js";
+import { authenticated } from "./middlewares/authenticated.js";
 
-const app = new Hono();
+const app = new Hono<AppVariables>();
 
 app.use(logger());
 
@@ -23,12 +26,29 @@ app.use(
   }),
 );
 
+app.use(async (c, next) => {
+  console.log(c.req.header());
+
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+
+  if (!session) {
+    c.set("user", null);
+    c.set("session", null);
+    return next();
+  }
+
+  c.set("user", session.user);
+  c.set("session", session.session);
+  return next();
+});
+
 app.get("/", (c) => {
   return c.text("Hello traveler");
 });
 
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 
+app.use(authenticated);
 app.route("/tourism-packages", tourismPackages);
 
 const port = 3000;
